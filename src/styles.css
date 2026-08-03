@@ -113,6 +113,7 @@ strong { font-weight: 650; }
 .btn-primary { background: var(--color-accent); color: white; }
 .btn-secondary { border-color: var(--color-border); background: var(--color-surface); color: var(--color-brand-800); }
 .btn-danger { background: var(--color-danger); color: white; }
+.table-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .btn-small { min-height: 36px; padding: 7px 10px; font-size: 11px; }
 .btn-block { width: 100%; min-height: 46px; }
 .text-link { display: inline-flex; align-items: center; gap: 5px; color: var(--color-accent); font-size: 12px; font-weight: 650; }

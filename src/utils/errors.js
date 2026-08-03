@@ -29,6 +29,9 @@ const MESSAGE_BY_DETAIL = {
   active_operator_required: 'Pilih akun operator yang aktif.',
   cannot_deactivate_self: 'Anda tidak dapat menonaktifkan akun sendiri.',
   last_super_admin_required: 'Minimal satu akun Super Admin harus tetap aktif.',
+  cannot_delete_self: 'Anda tidak dapat menghapus akun sendiri.',
+  profile_has_related_records: 'Pengguna masih memiliki data atau penugasan terkait. Nonaktifkan akun jika tidak ingin menghapus riwayatnya.',
+  profile_not_found: 'Profil pengguna tidak ditemukan.',
   invalid_event_transition: 'Perubahan status event tersebut tidak diizinkan.',
   unsupported_event_transition: 'Perubahan status event tersebut tidak didukung.',
 };

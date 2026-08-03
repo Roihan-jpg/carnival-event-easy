@@ -89,6 +89,13 @@ export async function updatePassword(password) {
   await signOut();
 }
 
+export async function changePassword(password) {
+  if (!password || password.length < 8) throw new Error('Kata sandi baru minimal delapan karakter.');
+  const client = requireClient();
+  const { error } = await client.auth.updateUser({ password });
+  if (error) throw new Error(toUserMessage(error));
+}
+
 export async function signOut() {
   const client = requireClient();
   await client.auth.signOut();

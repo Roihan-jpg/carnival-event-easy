@@ -5,6 +5,7 @@ import { navigate } from '../../core/router.js';
 import { getState } from '../../core/state.js';
 import { dataService } from '../../services/dataService.js';
 import { escapeHtml } from '../../utils/html.js';
+import { changePassword } from '../../core/auth.js';
 
 function assignmentCard({ item, assignment, type }) {
   const name = assignment?.profiles?.full_name || 'Belum ditugaskan';
@@ -38,7 +39,7 @@ export async function usersPage() {
     { label: 'Penugasan', key: 'assignment' },
     { label: 'Status', render: (row) => statusBadge(row.active ? 'active' : 'inactive') },
     { label: 'Aksi', render: (row) => canManage(row) && row.id !== currentUser.id
-      ? `<button class="btn btn-small btn-secondary" type="button" data-toggle-user="${row.id}" data-active="${row.active}">${row.active ? 'Nonaktifkan' : 'Aktifkan'}</button>`
+      ? `<div class="table-actions"><button class="btn btn-small btn-secondary" type="button" data-edit-profile="${row.id}">Edit</button><button class="btn btn-small btn-secondary" type="button" data-toggle-user="${row.id}" data-active="${row.active}">${row.active ? 'Nonaktifkan' : 'Aktifkan'}</button><button class="btn btn-small btn-danger" type="button" data-delete-profile="${row.id}">Hapus</button></div>`
       : '<span class="muted">Dilindungi</span>' },
   ];
   const roleOptions = currentUser.role === 'super_admin'
@@ -46,12 +47,35 @@ export async function usersPage() {
     : '<option value="judge">Juri</option><option value="operator">Operator</option><option value="viewer">Viewer</option>';
 
   return {
-    html: `${pageHeader({ eyebrow: 'Akses dan penugasan', title: 'Pengguna', description: 'Kelola profil petugas, status akun, dan penugasan event.', actions: '<button class="btn btn-primary" type="button" data-add-profile><i data-lucide="Plus"></i>Tambahkan profil</button>' })}
+    html: `${pageHeader({ eyebrow: 'Akses dan penugasan', title: 'Pengguna', description: 'Kelola profil petugas, status akun, dan penugasan event.', actions: `${currentUser.role === 'super_admin' ? '<button class="btn btn-secondary" type="button" data-edit-self><i data-lucide="UserRoundPen"></i>Edit profil saya</button>' : ''}<button class="btn btn-primary" type="button" data-add-profile><i data-lucide="Plus"></i>Tambahkan profil</button>` })}
       ${inlineAlert({ tone: 'info', title: 'Pembuatan akun aman', message: 'Buat akun terlebih dahulu di Supabase Authentication, lalu masukkan User ID pada form profil. Password dan service-role tidak pernah diproses browser.' })}
       <section class="section-card table-card">${dataTable({ columns, rows: users })}</section>
       <section class="section-card"><div class="section-heading"><div><p class="eyebrow">Penugasan juri</p><h2>Titik penilaian</h2></div></div><div class="assignment-grid">${settings.locations.map((location) => assignmentCard({ item: location, assignment: settings.judgeAssignments.find((row) => row.location_id === location.id), type: 'judge' })).join('')}</div></section>
       <section class="section-card"><div class="section-heading"><div><p class="eyebrow">Verifikator atraksi</p><h2>Tiga titik atraksi wajib</h2></div></div><div class="assignment-grid">${settings.points.map((point) => assignmentCard({ item: point, assignment: settings.attractionAssignments.find((row) => row.attraction_point_id === point.id), type: 'attraction' })).join('')}</div></section>`,
     bind() {
+      document.querySelector('[data-edit-self]')?.addEventListener('click', async () => {
+        const profile = users.find((item) => item.id === currentUser.id);
+        if (!profile) return;
+        const values = await confirmDialog({
+          title: 'Edit profil Super Admin', message: 'Nama akan diperbarui di seluruh tampilan sistem. Password hanya diperbarui melalui Supabase Auth.', confirmLabel: 'Simpan perubahan',
+          details: `<div class="dialog-options"><label class="field"><span>Nama lengkap *</span><input name="full-name" value="${escapeHtml(profile.name)}"></label><label class="field"><span>Password baru <small>Opsional, minimal 8 karakter</small></span><input name="password" type="password" autocomplete="new-password" minlength="8" placeholder="Biarkan kosong jika tidak diubah"></label><label class="field"><span>Ulangi password baru</span><input name="password-confirmation" type="password" autocomplete="new-password" minlength="8"></label></div>`,
+          collect: (dialog) => {
+            const fullName = dialog.querySelector('[name="full-name"]').value.trim();
+            const password = dialog.querySelector('[name="password"]').value;
+            const confirmation = dialog.querySelector('[name="password-confirmation"]').value;
+            if (!fullName || (password && (password.length < 8 || password !== confirmation))) return false;
+            return { fullName, password };
+          },
+        });
+        if (!values) return;
+        try {
+          if (values.fullName !== profile.name) await dataService.updateProfile({ id: currentUser.id, fullName: values.fullName, role: 'super_admin', isActive: true });
+          if (values.password) await changePassword(values.password);
+          showToast('Profil Super Admin diperbarui.');
+          navigate('/admin/pengguna', { replace: true });
+        } catch (error) { showToast(error.message, 'danger'); }
+      });
+
       document.querySelector('[data-add-profile]').addEventListener('click', async () => {
         const values = await confirmDialog({
           title: 'Tambahkan profil akun', message: 'User ID harus berasal dari Authentication → Users.', confirmLabel: 'Simpan profil',
@@ -69,6 +93,31 @@ export async function usersPage() {
 
       document.querySelectorAll('[data-toggle-user]').forEach((button) => button.addEventListener('click', async () => {
         try { await dataService.setUserActive(button.dataset.toggleUser, button.dataset.active !== 'true'); showToast('Status pengguna diperbarui.'); navigate('/admin/pengguna', { replace: true }); } catch (error) { showToast(error.message, 'danger'); }
+      }));
+
+      document.querySelectorAll('[data-edit-profile]').forEach((button) => button.addEventListener('click', async () => {
+        const user = users.find((item) => item.id === button.dataset.editProfile);
+        if (!user) return;
+        const editableRoleOptions = roleOptions.replace(`value="${user.roleCode}"`, `value="${user.roleCode}" selected`);
+        const values = await confirmDialog({
+          title: 'Edit profil pengguna', message: 'Perubahan role langsung memengaruhi akses pengguna.', confirmLabel: 'Simpan perubahan',
+          details: `<div class="dialog-options"><label class="field"><span>Nama lengkap *</span><input name="full-name" value="${escapeHtml(user.name)}"></label><label class="field"><span>Role *</span><select name="role">${editableRoleOptions}</select></label></div>`,
+          collect: (dialog) => {
+            const fullName = dialog.querySelector('[name="full-name"]').value.trim();
+            const role = dialog.querySelector('[name="role"]').value;
+            return fullName && role ? { fullName, role } : false;
+          },
+        });
+        if (!values) return;
+        try { await dataService.updateProfile({ id: user.id, fullName: values.fullName, role: values.role, isActive: user.active }); showToast('Profil pengguna diperbarui.'); navigate('/admin/pengguna', { replace: true }); } catch (error) { showToast(error.message, 'danger'); }
+      }));
+
+      document.querySelectorAll('[data-delete-profile]').forEach((button) => button.addEventListener('click', async () => {
+        const user = users.find((item) => item.id === button.dataset.deleteProfile);
+        if (!user) return;
+        const confirmed = await confirmDialog({ title: 'Hapus profil pengguna?', message: `Profil ${user.name} akan dihapus dari sistem. Riwayat yang memiliki relasi aktif harus dipertahankan dengan menonaktifkan akun.`, confirmLabel: 'Hapus profil', tone: 'danger' });
+        if (!confirmed) return;
+        try { await dataService.deleteProfile(user.id); showToast('Profil pengguna dihapus.'); navigate('/admin/pengguna', { replace: true }); } catch (error) { showToast(error.message, 'danger'); }
       }));
 
       document.querySelectorAll('[data-assign-judge]').forEach((button) => button.addEventListener('click', async () => {

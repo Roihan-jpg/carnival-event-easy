@@ -12,7 +12,7 @@ export function loginPage() {
     html: `<main class="login-page" id="main-content">
       <section class="login-identity">
         <a class="public-brand" href="/hasil" data-link><span class="brand-mark large"><img class="brand-logo" src="${logoUrl}" alt="Logo Randuagung"></span><span><strong>Randuagung 2026</strong><small>Kecamatan Randuagung</small></span></a>
-        <div class="login-message"><p class="eyebrow">Sistem penjurian resmi</p><h1>Menilai karya,<br><em>merawat budaya.</em></h1><p>Satu ruang kerja yang tertib untuk panitia, juri, dan petugas lapangan Karnaval Kecamatan Randuagung.</p></div>
+        <div class="login-message"><p class="eyebrow">Sistem penjurian resmi</p><h1>Randuagung,<br><em>Carnival 2026</em></h1><p>Satu ruang kerja yang tertib untuk panitia, juri, dan petugas lapangan Karnaval Kecamatan Randuagung.</p></div>
         <div class="login-event"><div><i data-lucide="CalendarDays"></i><span><small>Pelaksanaan</small><strong>Sabtu, 22 Agustus 2026</strong></span></div><div><i data-lucide="MapPin"></i><span><small>Rute</small><strong>Pasar Tunjung – Kantor Kecamatan</strong></span></div></div>
       </section>
       <section class="login-form-panel"><div class="login-form-wrap"><div class="mobile-login-brand"><span class="brand-mark"><img class="brand-logo" src="${logoUrl}" alt="Logo Randuagung"></span><strong>Randuagung 2026</strong></div><p class="eyebrow">Akses petugas</p><h2>Masuk ke sistem</h2><p>Gunakan akun yang telah diberikan oleh panitia.</p>

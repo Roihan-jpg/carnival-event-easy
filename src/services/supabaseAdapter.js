@@ -386,6 +386,20 @@ async function createProfile({ id, fullName, role }) {
   })));
 }
 
+async function updateProfile({ id, fullName, role, isActive }) {
+  const profile = assertSupabase(await client().rpc('manage_profile', {
+    target_user_id: id,
+    target_full_name: fullName.trim(),
+    target_role: role,
+    target_is_active: Boolean(isActive),
+  }));
+  return mapProfile(profile);
+}
+
+async function deleteProfile(id) {
+  return mapProfile(assertSupabase(await client().rpc('delete_profile', { target_user_id: id })));
+}
+
 async function assignJudge(judgeId, locationId) {
   return assertSupabase(await client().rpc('assign_judge_to_location', {
     target_judge_id: judgeId,
@@ -530,7 +544,7 @@ export const supabaseAdapter = {
   updateParticipantStatus, getStatusLogs,
   getAttractionPoints, getMyAttractionAssignment, getAttractionChecks, recordAttractionCheck,
   getPenaltyTypes, getPenalties, createPenalty, confirmPenalty, cancelPenalty,
-  getUsers, setUserActive, createProfile, assignJudge, revokeJudgeAssignment,
+  getUsers, setUserActive, createProfile, updateProfile, deleteProfile, assignJudge, revokeJudgeAssignment,
   assignAttractionVerifier, revokeAttractionAssignment,
   getAuditLogs, getIncidents, createIncident, handleIncident,
   getEventSettings, updateEventSettings, updateCriteria, transitionEvent,
