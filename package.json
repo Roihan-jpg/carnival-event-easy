@@ -1,0 +1,30 @@
+{
+  "name": "sistem-penjurian-karnaval-randuagung",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "dev": "vite",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "build": "vite build",
+    "preview": "vite preview",
+    "verify": "npm run lint && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.2.8",
+    "@fontsource/lora": "5.2.8",
+    "@supabase/supabase-js": "2.111.0",
+    "lucide": "^1.28.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "eslint": "10.8.0",
+    "tailwindcss": "4.3.3",
+    "vite": "8.2.0",
+    "vitest": "4.1.10"
+  }
+}
