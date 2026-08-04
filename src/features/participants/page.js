@@ -8,7 +8,7 @@ import { validateParticipant } from '../../utils/validation.js';
 import { parseParticipantCsv } from '../../utils/csv.js';
 
 export async function participantsPage() {
-  const participants = await dataService.getParticipants();
+  const [participants, categories] = await Promise.all([dataService.getParticipants(), dataService.getCategories()]);
   const query = new URLSearchParams(window.location.search);
   const search = query.get('cari') || '';
   const category = query.get('kategori') || 'semua';
@@ -37,7 +37,7 @@ export async function participantsPage() {
   return {
     html: `${pageHeader({ eyebrow: 'Data event', title: 'Peserta', description: 'Kelola identitas, nomor urut, jadwal, dan progres 20 peserta.', actions: '<button class="btn btn-secondary" type="button" data-import><i data-lucide="Download"></i>Impor CSV</button><a class="btn btn-primary" href="/admin/peserta/tambah" data-link><i data-lucide="Plus"></i>Tambah peserta</a>' })}
       ${filterBar(`<label class="search-field"><i data-lucide="Search"></i><span class="sr-only">Cari peserta</span><input type="search" value="${escapeHtml(search)}" placeholder="Cari nama atau nomor…" data-filter-search></label>
-        <label><span class="sr-only">Filter kategori</span><select data-filter-category><option value="semua">Semua kategori</option><option ${category === 'Pendidikan' ? 'selected' : ''}>Pendidikan</option><option ${category === 'Umum' ? 'selected' : ''}>Umum</option></select></label>
+        <label><span class="sr-only">Filter kategori</span><select data-filter-category><option value="semua">Semua kategori</option>${renderCategoryOptions(categories, category)}</select></label>
         <label><span class="sr-only">Filter status</span><select data-filter-status><option value="semua">Semua status</option><option value="standby" ${status === 'standby' ? 'selected' : ''}>Antre</option><option value="called" ${status === 'called' ? 'selected' : ''}>Dipanggil</option><option value="performing" ${status === 'performing' ? 'selected' : ''}>Tampil</option><option value="departed" ${status === 'departed' ? 'selected' : ''}>Berangkat</option><option value="completed" ${status === 'completed' ? 'selected' : ''}>Selesai</option><option value="issue" ${status === 'issue' ? 'selected' : ''}>Bermasalah</option></select></label>`, `${filtered.length} dari ${participants.length} peserta`)}
       <section class="section-card table-card">${dataTable({ columns, rows: paged, emptyTitle: 'Peserta tidak ditemukan', emptyMessage: 'Ubah kata pencarian atau filter untuk melihat hasil lain.' })}<div class="pagination"><span>Menampilkan ${filtered.length ? (safePage - 1) * pageSize + 1 : 0}–${Math.min(safePage * pageSize, filtered.length)} dari ${filtered.length}</span><div><button class="icon-btn" data-page="${safePage - 1}" ${safePage === 1 ? 'disabled' : ''} aria-label="Halaman sebelumnya"><i data-lucide="ChevronLeft"></i></button><span class="page-number active">${safePage}</span><button class="icon-btn" data-page="${safePage + 1}" ${safePage === pageCount ? 'disabled' : ''} aria-label="Halaman berikutnya"><i data-lucide="ChevronRight"></i></button></div></div></section>`,
     bind() {
@@ -109,14 +109,14 @@ export async function participantDetailPage({ id }) {
 }
 
 export async function participantFormPage({ id } = {}) {
-  const participant = id ? await dataService.getParticipant(id) : null;
+  const [participant, categories] = await Promise.all([id ? dataService.getParticipant(id) : null, dataService.getCategories()]);
   const editing = Boolean(participant);
   return {
     html: `${pageHeader({ eyebrow: editing ? 'Perbarui data' : 'Data baru', title: editing ? 'Edit Peserta' : 'Tambah Peserta', description: 'Kolom bertanda * wajib diisi.', actions: '<a class="btn btn-secondary" href="/admin/peserta" data-link><i data-lucide="ArrowLeft"></i>Batal</a>' })}
       <form class="form-layout" data-participant-form novalidate>
         <section class="section-card"><div class="section-heading"><div><p class="eyebrow">Bagian 1</p><h2>Identitas peserta</h2></div></div><div class="form-grid">
           ${field('sequenceNumber', 'Nomor urut *', 'number', participant?.sequenceNumber || '', 'Contoh: 21')}
-          ${selectField('category', 'Kategori *', ['Pendidikan', 'Umum'], participant?.category)}
+          ${selectField('category', 'Kategori *', categories, participant?.category)}
           <label class="field span-2"><span>Nama tim/lembaga *</span><input name="name" value="${escapeHtml(participant?.name || '')}" autocomplete="organization"><small class="field-error" data-error="name"></small></label>
           <label class="field span-2"><span>Tema penampilan</span><input name="theme" value="${escapeHtml(participant?.theme || '')}"></label>
           ${field('coordinator', 'Nama koordinator', 'text', participant?.coordinator || '', '')}
@@ -153,8 +153,12 @@ function field(name, label, type, value, placeholder) {
   return `<label class="field"><span>${label}</span><input name="${name}" type="${type}" value="${escapeHtml(value)}" placeholder="${escapeHtml(placeholder)}" ${type === 'number' ? 'inputmode="numeric" min="1"' : ''}><small class="field-error" data-error="${name}"></small></label>`;
 }
 
-function selectField(name, label, options, selected) {
-  return `<label class="field"><span>${label}</span><select name="${name}"><option value="">Pilih kategori</option>${options.map((option) => `<option ${option === selected ? 'selected' : ''}>${option}</option>`).join('')}</select><small class="field-error" data-error="${name}"></small></label>`;
+export function renderCategoryOptions(categories, selected) {
+  return categories.map((category) => `<option value="${escapeHtml(category.name)}" ${category.name === selected ? 'selected' : ''}>${escapeHtml(category.name)}</option>`).join('');
+}
+
+function selectField(name, label, categories, selected) {
+  return `<label class="field"><span>${label}</span><select name="${name}"><option value="">Pilih kategori</option>${renderCategoryOptions(categories, selected)}</select><small class="field-error" data-error="${name}"></small></label>`;
 }
 
 function detailGrid(items) {

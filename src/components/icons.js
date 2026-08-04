@@ -1,6 +1,6 @@
 import {
   AlertCircle, AlertTriangle, ArrowLeft, Award, BookOpen, CalendarDays, Check,
-  CheckCircle2, ChevronDown, ChevronRight, Circle, ClipboardCheck, Clock3, Download,
+  CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Circle, ClipboardCheck, Clock3, Download,
   Edit3, Eye, FileClock, FileText, Gavel, History, Home, Info, LayoutDashboard,
   ListChecks, LockKeyhole, LogOut, MapPin, Menu, Minus, MoreHorizontal, Plus, Radio,
   RefreshCw, Save, Search, Settings, ShieldAlert, Sparkles, Trophy, UserCog, Users,
@@ -10,7 +10,7 @@ import {
 
 const icons = {
   AlertCircle, AlertTriangle, ArrowLeft, Award, BookOpen, CalendarDays, Check,
-  CheckCircle2, ChevronDown, ChevronRight, Circle, ClipboardCheck, Clock3, Download,
+  CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Circle, ClipboardCheck, Clock3, Download,
   Edit3, Eye, FileClock, FileText, Gavel, History, Home, Info, LayoutDashboard,
   ListChecks, LockKeyhole, LogOut, MapPin, Menu, Minus, MoreHorizontal, Plus, Radio,
   RefreshCw, Save, Search, Settings, ShieldAlert, Sparkles, Trophy, UserCog, Users,
