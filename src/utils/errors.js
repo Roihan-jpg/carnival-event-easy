@@ -17,6 +17,8 @@ const MESSAGE_BY_DETAIL = {
   zero_score_requires_reason: 'Nilai nol wajib disertai alasan.',
   results_incomplete: 'Hasil belum dapat difinalkan karena nilai belum lengkap.',
   scoring_must_be_closed: 'Tutup penjurian sebelum membuat atau menerbitkan hasil.',
+  scoring_always_open: 'Penjurian selalu terbuka dan tidak dapat ditutup.',
+  scoring_must_be_open: 'Penjurian belum dibuka.',
   waiver_requires_two_submitted_scores: 'Waiver memerlukan minimal dua nilai juri yang sudah dikirim.',
   waiver_reason_and_minutes_required: 'Alasan dan referensi berita acara waiver wajib diisi.',
   heavy_penalty_requires_super_admin: 'Penalti di atas 10 poin memerlukan Super Admin.',
