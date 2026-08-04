@@ -64,7 +64,7 @@ export async function participantsPage() {
           title: 'Impor peserta dari CSV',
           message: 'Pilih file untuk memeriksa format dan kesalahan per baris sebelum data disimpan.',
           confirmLabel: 'Tinjau file',
-          details: '<div class="dialog-options"><label class="file-drop"><i data-lucide="Download"></i><span><strong>Pilih file CSV</strong><small>Maksimum 2 MB · UTF-8</small></span><input type="file" accept=".csv,text/csv"></label><div class="csv-columns"><strong>Kolom yang dikenali</strong><p>nomor_urut, nama, kategori, tema, koordinator, kontak, jumlah_anggota, jadwal_berangkat, alasan_pengecualian</p></div></div>',
+          details: '<div class="dialog-options"><label class="file-drop"><i data-lucide="Download"></i><span><strong>Pilih file CSV</strong><small>Maksimum 2 MB · UTF-8</small></span><input type="file" accept=".csv,text/csv"></label><div class="csv-columns"><strong>Kolom yang dikenali</strong><p>nomor_urut, nama, kategori, tema, koordinator, kontak, jumlah_anggota, jadwal_berangkat, alasan_pengecualian</p><a class="btn btn-secondary btn-small" href="/template-import-peserta.csv" download="template-import-peserta.csv"><i data-lucide="FileDown"></i>Unduh template CSV</a></div></div>',
           collect: (dialog) => dialog.querySelector('input[type="file"]').files[0] || false,
         });
         if (!file) return;

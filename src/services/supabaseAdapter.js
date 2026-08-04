@@ -92,6 +92,9 @@ async function saveParticipant(values, id) {
   const categories = await getCategories();
   const category = categories.find((item) => item.id === values.categoryId || item.name === values.category);
   if (!category) throw new Error('Kategori peserta tidak ditemukan.');
+  const existing = id ? null : assertSupabase(await client().from('participants')
+    .select('id, is_active').eq('event_id', event.id).eq('sequence_number', Number(values.sequenceNumber)).maybeSingle());
+  if (existing?.is_active) throw new Error('Nomor urut sudah digunakan oleh peserta aktif.');
   const departure = toIsoAtEventDate(event.event_date, values.scheduledTime);
   const payload = {
     event_id: event.id,
@@ -106,10 +109,13 @@ async function saveParticipant(values, id) {
     estimated_finish_at: addHours(departure, 7),
     exception_reason: values.exceptionReason?.trim() || null,
     notes: values.notes?.trim() || null,
+    is_active: true,
   };
   const query = id
     ? client().from('participants').update(payload).eq('id', id)
-    : client().from('participants').insert(payload);
+    : existing
+      ? client().from('participants').update(payload).eq('id', existing.id)
+      : client().from('participants').insert(payload);
   const row = assertSupabase(await query.select('*, participant_categories(id, code, name)').single());
   return mapParticipant(row);
 }
@@ -122,8 +128,8 @@ async function importParticipants(rows) {
   if (!rows.length || rows.length > 500) throw new Error('Jumlah baris impor harus antara 1 dan 500 peserta.');
   const event = await activeEvent();
   const categories = await getCategories();
-  const existing = assertSupabase(await client().from('participants').select('sequence_number').eq('event_id', event.id));
-  const used = new Set(existing.map((row) => row.sequence_number));
+  const existing = assertSupabase(await client().from('participants').select('sequence_number, is_active').eq('event_id', event.id));
+  const used = new Set(existing.filter((row) => row.is_active).map((row) => row.sequence_number));
   const batch = new Set();
   const errors = [];
   const payload = rows.map((values, index) => {
@@ -148,15 +154,30 @@ async function importParticipants(rows) {
       scheduled_departure_at: departure,
       estimated_finish_at: addHours(departure, 7),
       exception_reason: values.exceptionReason?.trim() || null,
+      is_active: true,
     };
   });
   if (errors.length) throw new Error(errors.slice(0, 5).join(' '));
-  return assertSupabase(await client().from('participants').insert(payload).select());
+  return assertSupabase(await client().from('participants').upsert(payload, { onConflict: 'event_id,sequence_number' }).select());
 }
 
 async function getLocations() {
   const event = await activeEvent();
   return assertSupabase(await client().from('judging_locations').select('*').eq('event_id', event.id).order('sort_order'));
+}
+
+async function updateLocations(locations) {
+  const event = await activeEvent();
+  const payload = locations.map((location) => ({
+    id: location.id,
+    event_id: event.id,
+    code: location.code,
+    name: location.name,
+    address_note: location.addressNote || null,
+    sort_order: location.sortOrder,
+    is_active: location.isActive,
+  }));
+  return assertSupabase(await client().from('judging_locations').upsert(payload).select());
 }
 
 async function getCriteria() {
@@ -539,7 +560,7 @@ function subscribeOperational(table, eventId, callback) {
 export const supabaseAdapter = {
   getActiveEvent: activeEvent,
   getParticipants, getParticipant, getCategories, saveParticipant, archiveParticipant, importParticipants,
-  getLocations, getCriteria, getScoreSheets, getScoreSheet, getMyAssignment,
+  getLocations, updateLocations, getCriteria, getScoreSheets, getScoreSheet, getMyAssignment,
   saveScoreDraft, submitScoreSheet, unlockScoreSheet, waiveScore, getJudgingProgress,
   updateParticipantStatus, getStatusLogs,
   getAttractionPoints, getMyAttractionAssignment, getAttractionChecks, recordAttractionCheck,
